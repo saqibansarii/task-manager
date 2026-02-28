@@ -5,15 +5,15 @@ import './App.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const PRIORITY_COLORS = {
-  low: { bg: '#1a3a2a', text: '#4ade80', border: '#166534' },
+  low:    { bg: '#1a3a2a', text: '#4ade80', border: '#166534' },
   medium: { bg: '#3a2e00', text: '#fbbf24', border: '#854d0e' },
-  high: { bg: '#3a1a1a', text: '#f87171', border: '#991b1b' },
+  high:   { bg: '#3a1a1a', text: '#f87171', border: '#991b1b' },
 };
 
 const STATUS_COLORS = {
-  todo: { bg: '#1e1e3a', text: '#818cf8', border: '#3730a3' },
+  todo:        { bg: '#1e1e3a', text: '#818cf8', border: '#3730a3' },
   'in-progress': { bg: '#2a1f3a', text: '#c084fc', border: '#7e22ce' },
-  completed: { bg: '#1a3a2a', text: '#4ade80', border: '#166534' },
+  completed:   { bg: '#1a3a2a', text: '#4ade80', border: '#166534' },
 };
 
 const STATUS_LABELS = {
@@ -30,6 +30,7 @@ const defaultForm = {
   dueDate: '',
 };
 
+/* ── Modal Wrapper ─────────────────────────────────────────── */
 function Modal({ isOpen, onClose, children }) {
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -47,6 +48,7 @@ function Modal({ isOpen, onClose, children }) {
   );
 }
 
+/* ── Task Form ─────────────────────────────────────────────── */
 function TaskForm({ form, onChange, onSubmit, onCancel, editingId }) {
   return (
     <form onSubmit={onSubmit} className="task-form">
@@ -85,7 +87,6 @@ function TaskForm({ form, onChange, onSubmit, onCancel, editingId }) {
             <option value="completed">Completed</option>
           </select>
         </div>
-
         <div className="form-group">
           <label>Priority</label>
           <select name="priority" value={form.priority} onChange={onChange}>
@@ -116,23 +117,21 @@ function TaskForm({ form, onChange, onSubmit, onCancel, editingId }) {
   );
 }
 
+/* ── Task Card ─────────────────────────────────────────────── */
 function TaskCard({ task, onEdit, onDelete }) {
   const priorityStyle = PRIORITY_COLORS[task.priority];
-  const statusStyle = STATUS_COLORS[task.status];
-
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'completed';
+  const statusStyle   = STATUS_COLORS[task.status];
+  const isOverdue = task.dueDate &&
+    new Date(task.dueDate) < new Date() &&
+    task.status !== 'completed';
 
   return (
     <div className={`task-card ${task.status === 'completed' ? 'completed' : ''}`}>
       <div className="task-card-header">
         <h3 className="task-title">{task.title}</h3>
         <div className="task-actions">
-          <button className="icon-btn edit-btn" onClick={() => onEdit(task)} title="Edit">
-            ✏️
-          </button>
-          <button className="icon-btn delete-btn" onClick={() => onDelete(task._id)} title="Delete">
-            🗑️
-          </button>
+          <button className="icon-btn edit-btn" onClick={() => onEdit(task)} title="Edit">✏️</button>
+          <button className="icon-btn delete-btn" onClick={() => onDelete(task._id)} title="Delete">🗑️</button>
         </div>
       </div>
 
@@ -141,10 +140,18 @@ function TaskCard({ task, onEdit, onDelete }) {
       )}
 
       <div className="task-badges">
-        <span className="badge" style={{ background: statusStyle.bg, color: statusStyle.text, border: `1px solid ${statusStyle.border}` }}>
+        <span className="badge" style={{
+          background: statusStyle.bg,
+          color: statusStyle.text,
+          border: `1px solid ${statusStyle.border}`
+        }}>
           {STATUS_LABELS[task.status]}
         </span>
-        <span className="badge" style={{ background: priorityStyle.bg, color: priorityStyle.text, border: `1px solid ${priorityStyle.border}` }}>
+        <span className="badge" style={{
+          background: priorityStyle.bg,
+          color: priorityStyle.text,
+          border: `1px solid ${priorityStyle.border}`
+        }}>
           {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority
         </span>
         {task.dueDate && (
@@ -156,24 +163,27 @@ function TaskCard({ task, onEdit, onDelete }) {
       </div>
 
       <div className="task-meta">
-        Created {new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        Created {new Date(task.createdAt).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        })}
       </div>
     </div>
   );
 }
 
+/* ── App ───────────────────────────────────────────────────── */
 function App() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [form, setForm] = useState(defaultForm);
-  const [editingId, setEditingId] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [tasks, setTasks]             = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState('');
+  const [form, setForm]               = useState(defaultForm);
+  const [editingId, setEditingId]     = useState(null);
+  const [modalOpen, setModalOpen]     = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [filterStatus, setFilterStatus]   = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast]             = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -186,8 +196,8 @@ function App() {
       setError('');
       const res = await axios.get(`${API_URL}/tasks`);
       setTasks(res.data.data);
-    } catch (err) {
-      setError('Failed to fetch tasks. Make sure the backend is running.');
+    } catch {
+      setError('Failed to connect to server. Make sure the backend is running.');
     } finally {
       setLoading(false);
     }
@@ -195,9 +205,8 @@ function App() {
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -250,20 +259,22 @@ function App() {
   const filtered = tasks.filter(task => {
     if (filterStatus !== 'all' && task.status !== filterStatus) return false;
     if (filterPriority !== 'all' && task.priority !== filterPriority) return false;
-    if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !task.description?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery &&
+      !task.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !task.description?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
   const stats = {
-    total: tasks.length,
-    todo: tasks.filter(t => t.status === 'todo').length,
+    total:      tasks.length,
+    todo:       tasks.filter(t => t.status === 'todo').length,
     inProgress: tasks.filter(t => t.status === 'in-progress').length,
-    completed: tasks.filter(t => t.status === 'completed').length,
+    completed:  tasks.filter(t => t.status === 'completed').length,
   };
 
   return (
     <div className="app">
+
       {/* Toast */}
       {toast && (
         <div className={`toast toast-${toast.type}`}>
@@ -288,6 +299,7 @@ function App() {
       </header>
 
       <main className="main">
+
         {/* Stats */}
         <div className="stats-grid">
           <div className="stat-card">
@@ -331,7 +343,7 @@ function App() {
           </select>
         </div>
 
-        {/* Error */}
+        {/* Error Banner */}
         {error && (
           <div className="error-banner">
             ⚠️ {error}
@@ -339,7 +351,7 @@ function App() {
           </div>
         )}
 
-        {/* Tasks */}
+        {/* Task List */}
         {loading ? (
           <div className="loading">
             <div className="spinner"></div>
@@ -351,7 +363,9 @@ function App() {
             <h3>{tasks.length === 0 ? 'No tasks yet' : 'No tasks match your filters'}</h3>
             <p>{tasks.length === 0 ? 'Create your first task to get started!' : 'Try adjusting your search or filters'}</p>
             {tasks.length === 0 && (
-              <button className="btn-add" onClick={() => setModalOpen(true)}>+ Create First Task</button>
+              <button className="btn-add" style={{ marginTop: '16px' }} onClick={() => setModalOpen(true)}>
+                + Create First Task
+              </button>
             )}
           </div>
         ) : (
@@ -368,7 +382,7 @@ function App() {
         )}
       </main>
 
-      {/* Task Form Modal */}
+      {/* Add / Edit Modal */}
       <Modal isOpen={modalOpen} onClose={closeModal}>
         <TaskForm
           form={form}
@@ -384,13 +398,14 @@ function App() {
         <div className="confirm-dialog">
           <div className="confirm-icon">🗑️</div>
           <h2>Delete Task?</h2>
-          <p>This action cannot be undone. Are you sure you want to delete this task?</p>
+          <p>This action cannot be undone.</p>
           <div className="form-actions">
             <button className="btn-cancel" onClick={() => setDeleteConfirm(null)}>Cancel</button>
             <button className="btn-delete" onClick={() => handleDelete(deleteConfirm)}>Delete</button>
           </div>
         </div>
       </Modal>
+
     </div>
   );
 }
